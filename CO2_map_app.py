@@ -139,3 +139,9 @@ for cat, col in legend_categories.items():
 legend_html += "</div>"
 
 m.get_root().html.add_child(folium.Element(legend_html))
+
+
+# -------------------
+# Display in Streamlit
+# -------------------
+st_folium(m, width=1200, height=900)
