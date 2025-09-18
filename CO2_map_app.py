@@ -86,8 +86,8 @@ category_colors = {
 # -------------------
 m = folium.Map(location=[-25, 135], zoom_start=4)
 
-# Keep track of (category, source) pairs for legend
-legend_items = []
+# Keep track of categories already in legend
+legend_categories = {}
 
 for key in results.keys():
     category, source = key.split('/')
@@ -96,7 +96,7 @@ for key in results.keys():
     df = results[key][metric_choice]
 
     # Create feature group per category/source
-    fg = folium.FeatureGroup(name=f"{category}/{source}", show=True)
+    fg = folium.FeatureGroup(name=f"{category}/{source}", show=False)
 
     for _, row in df.iterrows():
         if pd.isna(row["lat"]) or pd.isna(row["lon"]):
@@ -119,30 +119,10 @@ for key in results.keys():
 
     fg.add_to(m)
 
-    # Store legend info for subcategories
-    legend_items.append((f"{category}/{source}", color))
+    # Store legend info (only once per category)
+    if category not in legend_categories:
+        legend_categories[category] = color
 
-
-# -------------------
-# Add legend manually
-# -------------------
-legend_html = """
-<div style="position: fixed; 
-     bottom: 30px; left: 30px; width: 260px; z-index:9999; 
-     background-color:white; border:2px solid grey; border-radius:8px; 
-     padding: 10px; font-size:13px; line-height:1.4;">
-     <b>Legend</b><br>
-"""
-for label, col in legend_items:
-    legend_html += f'<i style="background:{col};width:12px;height:12px;display:inline-block;margin-right:8px;"></i>{label}<br>'
-legend_html += "</div>"
-
-m.get_root().html.add_child(folium.Element(legend_html))
-
-# -------------------
-# Add layer control
-# -------------------
-folium.LayerControl(collapsed=False).add_to(m)
 
 # -------------------
 # Display in Streamlit
