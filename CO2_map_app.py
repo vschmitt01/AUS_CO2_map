@@ -107,10 +107,11 @@ for key in results.keys():
             radius=min(value / 100000, 10),  # scale marker size
             popup=(
                 f"<b>Dataset:</b> {dataset_choice}<br>"
+                f"<b>Category:</b> {category}/{source}<br>"
                 f"<b>Source:</b> {row['source_name']}<br>"
-                f"<b>{metric_choice.capitalize()}:</b> {value:,.0f}"
+                f"<b>{metric_choice.capitalize()}:</b> {value:,.0f} {unit}"
             ),
-            tooltip=f"{category} — {source} — {value:,.0f} {unit}",
+            # tooltip=f"{category} — {source} — {value:,.0f} {unit}",
             color=color,
             fill=True,
             fill_opacity=0.6,
