@@ -5,7 +5,7 @@ import folium
 import streamlit as st
 from streamlit_folium import st_folium
 
-root_path = "C:/Users/VictorSchmitt/Desktop/CO2 Study/"
+root_path = "data/"
 zip_path_CO2eq = root_path + "DATA.zip" 
 zip_path_CO2 = root_path + "DATA_co2.zip"
 year = 2024
