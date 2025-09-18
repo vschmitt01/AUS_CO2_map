@@ -111,7 +111,7 @@ for key in results.keys():
 
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
-            radius=min(value / 100000, 10),  # scale marker size
+            radius=row["radius"],
             popup=(f"<b>Dataset:</b> {dataset_choice}<br>"
                    f"<b>Category:</b> {category}/{source}<br>"
                    f"<b>Source:</b> {row['source_name']}<br>"
