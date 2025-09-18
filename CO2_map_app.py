@@ -84,35 +84,30 @@ category_colors = {
 # -------------------
 # Build Folium map
 # -------------------
-if "map_layers" not in st.session_state:
-    st.session_state.map_layers = {}
-
 m = folium.Map(location=[-25, 135], zoom_start=4)
+
+# Keep track of categories already in legend
+legend_categories = {}
 
 for key in results.keys():
     category, source = key.split('/')
     color = category_colors.get(category, "gray")
+    
     df = results[key][metric_choice]
 
-    # Reuse or create feature group
-    fg_name = f"{category}/{source}"
-    if fg_name in st.session_state.map_layers:
-        fg = st.session_state.map_layers[fg_name]
-        fg._children.clear()  # clear old markers
-    else:
-        fg = folium.FeatureGroup(name=fg_name, show=False)
-        st.session_state.map_layers[fg_name] = fg
+    # Create feature group per category/source
+    fg = folium.FeatureGroup(name=f"{category}/{source}", show=False)
 
     for _, row in df.iterrows():
         if pd.isna(row["lat"]) or pd.isna(row["lon"]):
             continue
-
+        
         unit = f"t{row['gas']}" if metric_choice == 'emission' else row['activity_units']
         value = row[f"yearly_{metric_choice}"]
 
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
-            radius=min(value / 100000, 10),
+            radius=min(value / 100000, 10),  # scale marker size
             popup=(f"<b>Dataset:</b> {dataset_choice}<br>"
                    f"<b>Category:</b> {category}/{source}<br>"
                    f"<b>Source:</b> {row['source_name']}<br>"
@@ -124,6 +119,12 @@ for key in results.keys():
 
     fg.add_to(m)
 
-# Layer control
-folium.LayerControl(collapsed=False).add_to(m)
+    # Store legend info (only once per category)
+    if category not in legend_categories:
+        legend_categories[category] = color
+
+
+# -------------------
+# Display in Streamlit
+# -------------------
 st_folium(m, width=1200, height=900)
