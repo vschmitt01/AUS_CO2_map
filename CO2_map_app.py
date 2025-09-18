@@ -100,7 +100,7 @@ for key in results.keys():
 
     # Precompute radius for faster rendering
     df = df.copy()
-    df["radius"] = (df[f"yearly_{metric_choice}"]/100000).clip(upper=10)
+    df["radius"] = 0.1 if (df[f"yearly_{metric_choice}"]/100000).clip(upper=10) == 0 else (df[f"yearly_{metric_choice}"]/100000).clip(upper=10)
     
     for _, row in df.iterrows():
         if pd.isna(row["lat"]) or pd.isna(row["lon"]):
