@@ -5,7 +5,7 @@ import folium
 import streamlit as st
 from streamlit_folium import st_folium
 
-root_path = "data/"
+root_path = "C:/Users/VictorSchmitt/Desktop/CO2 Study/"
 zip_path_CO2eq = root_path + "DATA.zip" 
 zip_path_CO2 = root_path + "DATA_co2.zip"
 year = 2024
@@ -98,7 +98,8 @@ for key in results.keys():
     for _, row in df.iterrows():
         if pd.isna(row["lat"]) or pd.isna(row["lon"]):
             continue
-
+        
+        unit = row['gas'] if metric_choice == 'emission' else row['activity_units']
         value = row[f"yearly_{metric_choice}"]
 
         folium.CircleMarker(
@@ -109,7 +110,7 @@ for key in results.keys():
                 f"<b>Source:</b> {row['source_name']}<br>"
                 f"<b>{metric_choice.capitalize()}:</b> {value:,.0f}"
             ),
-            tooltip=f"{category} — {source} — {value:,.0f}",
+            tooltip=f"{category} — {source} — {value:,.0f} {unit}",
             color=color,
             fill=True,
             fill_opacity=0.6,
@@ -123,4 +124,4 @@ folium.LayerControl(collapsed=False).add_to(m)
 # -------------------
 # Display in Streamlit
 # -------------------
-st_folium(m, width=900, height=600)
+st_folium(m, width=1200, height=900)
