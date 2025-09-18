@@ -60,11 +60,11 @@ results_CO2   = load_results(zip_path_CO2, "DATA_co2/")
 # -------------------
 st.title("CO₂ and CO₂eq Map Explorer")
 
-dataset_choice = st.radio("Choose dataset:", ["CO2eq", "CO2"])
+dataset_choice = st.radio("Choose dataset:", ["CO₂eq", "CO₂"])
 metric_choice = st.radio("Choose metric:", ["emission", "activity"])
 
 # Choose which results dict
-results = results_CO2eq if dataset_choice == "CO2eq" else results_CO2
+results = results_CO2eq if dataset_choice == "CO₂eq" else results_CO2
 
 # -------------------
 # Category color mapping
