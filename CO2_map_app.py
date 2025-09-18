@@ -123,6 +123,7 @@ for key in results.keys():
     if category not in legend_categories:
         legend_categories[category] = color
 
+folium.LayerControl(collapsed=False).add_to(m)
 
 # -------------------
 # Display in Streamlit
