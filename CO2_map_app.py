@@ -95,4 +95,48 @@ for key in results.keys():
     fg = folium.FeatureGroup(name=f"{category}/{source}", show=False)
 
     for _, row in df.iterrows():
-        if pd.isna(row["lat"]) or pd.isna(row["lon"]()
+        if pd.isna(row["lat"]) or pd.isna(row["lon"]):
+            continue
+        unit = f"t{row['gas']}" if metric_choice=='emission' else row['activity_units']
+        value = row[f"yearly_{metric_choice}"]
+        folium.CircleMarker(
+            location=[row["lat"], row["lon"]],
+            radius=min(value/100000, 10),
+            popup=(f"<b>Dataset:</b> {dataset_choice}<br>"
+                   f"<b>Category:</b> {category}/{source}<br>"
+                   f"<b>Source:</b> {row['source_name']}<br>"
+                   f"<b>{metric_choice.capitalize()}:</b> {value:,.0f} {unit}"),
+            color=color,
+            fill=True,
+            fill_opacity=0.6,
+        ).add_to(fg)
+
+    fg.add_to(m)
+
+# -------------------
+# Add LayerControl
+# -------------------
+folium.LayerControl(collapsed=False).add_to(m)
+
+# -------------------
+# Inject smaller LayerControl CSS
+# -------------------
+layer_control_css = """
+<style>
+.leaflet-control-layers {
+    font-size: 12px !important;
+    max-height: 250px !important;
+    width: 180px !important;
+}
+.leaflet-control-layers-toggle {
+    width: 25px !important;
+    height: 25px !important;
+}
+</style>
+"""
+m.get_root().html.add_child(folium.Element(layer_control_css))
+
+# -------------------
+# Display map
+# -------------------
+st_folium(m, width=900, height=600)
