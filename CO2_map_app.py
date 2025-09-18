@@ -141,24 +141,24 @@ if "last_metric" not in st.session_state or st.session_state.last_metric != metr
         st.session_state.layer_control_added = True
 
 
-        # -------------------
-        # Display in Streamlit
-        # -------------------
-        layer_control_css = """
-        <style>
-        .leaflet-control-layers {
-            font-size: 12px !important;       /* smaller text */
-            max-height: 250px !important;     /* reduce height */
-            width: 180px !important;          /* reduce width */
-        }
-        .leaflet-control-layers-toggle {
-            width: 25px !important;
-            height: 25px !important;
-        }
-        </style>
-        """
-        
-        m.get_root().html.add_child(folium.Element(layer_control_css))
+# -------------------
+# Display in Streamlit
+# -------------------
+layer_control_css = """
+<style>
+.leaflet-control-layers {
+    font-size: 12px !important;       /* smaller text */
+    max-height: 250px !important;     /* reduce height */
+    width: 180px !important;          /* reduce width */
+}
+.leaflet-control-layers-toggle {
+    width: 25px !important;
+    height: 25px !important;
+}
+</style>
+"""
+
+m.get_root().html.add_child(folium.Element(layer_control_css))
 
 
 st_folium(m, width=900, height=600)
