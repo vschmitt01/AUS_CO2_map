@@ -5,7 +5,7 @@ import folium
 import streamlit as st
 from streamlit_folium import st_folium
 
-root_path = "data/"
+root_path = "C:/Users/VictorSchmitt/Desktop/CO2 Study/"
 zip_path_CO2eq = root_path + "DATA.zip" 
 zip_path_CO2 = root_path + "DATA_co2.zip"
 year = 2024
@@ -86,32 +86,32 @@ category_colors = {
 # -------------------
 m = folium.Map(location=[-25, 135], zoom_start=4)
 
+# Keep track of categories already in legend
+legend_categories = {}
+
 for key in results.keys():
     category, source = key.split('/')
     color = category_colors.get(category, "gray")
     
     df = results[key][metric_choice]
 
-    # Create feature group per category (clickable in legend)
+    # Create feature group per category/source
     fg = folium.FeatureGroup(name=f"{category}/{source}", show=True)
 
     for _, row in df.iterrows():
         if pd.isna(row["lat"]) or pd.isna(row["lon"]):
             continue
         
-        unit = row['gas'] if metric_choice == 'emission' else row['activity_units']
+        unit = f"t{row['gas']}" if metric_choice == 'emission' else row['activity_units']
         value = row[f"yearly_{metric_choice}"]
 
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
             radius=min(value / 100000, 10),  # scale marker size
-            popup=(
-                f"<b>Dataset:</b> {dataset_choice}<br>"
-                f"<b>Category:</b> {category}/{source}<br>"
-                f"<b>Source:</b> {row['source_name']}<br>"
-                f"<b>{metric_choice.capitalize()}:</b> {value:,.0f} {unit}"
-            ),
-            # tooltip=f"{category} — {source} — {value:,.0f} {unit}",
+            popup=(f"<b>Dataset:</b> {dataset_choice}<br>"
+                   f"<b>Category:</b> {category}/{source}<br>"
+                   f"<b>Source:</b> {row['source_name']}<br>"
+                   f"<b>{metric_choice.capitalize()}:</b> {value:,.0f} {unit}"),
             color=color,
             fill=True,
             fill_opacity=0.6,
@@ -119,10 +119,23 @@ for key in results.keys():
 
     fg.add_to(m)
 
-# Add layer control (legend toggle)
-folium.LayerControl(collapsed=False).add_to(m)
+    # Store legend info (only once per category)
+    if category not in legend_categories:
+        legend_categories[category] = color
+
 
 # -------------------
-# Display in Streamlit
+# Add legend manually
 # -------------------
-st_folium(m, width=1200, height=900)
+legend_html = """
+<div style="position: fixed; 
+     bottom: 30px; left: 30px; width: 200px; z-index:9999; 
+     background-color:white; border:2px solid grey; border-radius:8px; 
+     padding: 10px; font-size:14px;">
+     <b>Legend</b><br>
+"""
+for cat, col in legend_categories.items():
+    legend_html += f'<i style="background:{col};width:12px;height:12px;float:left;margin-right:8px;"></i>{cat}<br>'
+legend_html += "</div>"
+
+m.get_root().html.add_child(folium.Element(legend_html))
