@@ -98,6 +98,10 @@ for key in results.keys():
     # Create feature group per category/source
     fg = folium.FeatureGroup(name=f"{category}/{source}", show=False)
 
+    # Precompute radius for faster rendering
+    df = df.copy()
+    df["radius"] = (df[f"yearly_{metric_choice}"]/100000).clip(upper=10)
+    
     for _, row in df.iterrows():
         if pd.isna(row["lat"]) or pd.isna(row["lon"]):
             continue
