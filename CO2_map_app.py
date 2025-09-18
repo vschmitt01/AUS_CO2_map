@@ -131,5 +131,24 @@ for key in results.keys():
 # -------------------
 # Display in Streamlit
 # -------------------
+# Inject CSS to make LayerControl smaller
+layer_control_css = """
+<style>
+.leaflet-control-layers {
+    font-size: 12px !important;       /* smaller text */
+    max-height: 250px !important;     /* reduce height */
+    width: 180px !important;          /* reduce width */
+}
+.leaflet-control-layers-toggle {
+    width: 25px !important;
+    height: 25px !important;
+}
+</style>
+"""
+
+m.get_root().html.add_child(folium.Element(layer_control_css))
+
+# Add LayerControl
 folium.LayerControl(collapsed=False).add_to(m)
+
 st_folium(m, width=900, height=600)
