@@ -150,4 +150,4 @@ m.get_root().html.add_child(folium.Element(layer_control_css))
 # Add LayerControl
 folium.LayerControl(collapsed=False).add_to(m)
 
-st_folium(m, width=1200, height=900)
+st_folium(m, width=900, height=600)
