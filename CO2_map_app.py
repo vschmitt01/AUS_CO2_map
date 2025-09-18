@@ -13,6 +13,7 @@ year = 2024
 # -------------------
 # Load data function
 # -------------------
+@st.cache_data
 def load_results(zip_path, prefix):
     results = {}
     with zipfile.ZipFile(zip_path, 'r') as z:    
