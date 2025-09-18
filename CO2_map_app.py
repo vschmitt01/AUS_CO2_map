@@ -131,4 +131,4 @@ m.get_root().html.add_child(folium.Element(layer_control_css))
 # -------------------
 # Display map
 # -------------------
-st_folium(m, width=900, height=600, returned_objects=False)
+st_folium(m, width=900, height=600)
