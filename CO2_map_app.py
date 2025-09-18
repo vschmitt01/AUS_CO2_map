@@ -5,6 +5,9 @@ import folium
 import streamlit as st
 from streamlit_folium import st_folium
 
+# -------------------
+# Paths and year
+# -------------------
 root_path = "data/"
 zip_path_CO2eq = root_path + "DATA.zip" 
 zip_path_CO2 = root_path + "DATA_co2.zip"
@@ -50,8 +53,9 @@ def load_results(zip_path, prefix):
                 }
     return results
 
-
+# -------------------
 # Load both datasets
+# -------------------
 results_CO2eq = load_results(zip_path_CO2eq, "DATA/")
 results_CO2   = load_results(zip_path_CO2, "DATA_co2/")
 
@@ -59,15 +63,12 @@ results_CO2   = load_results(zip_path_CO2, "DATA_co2/")
 # Streamlit UI
 # -------------------
 st.title("CO₂ and CO₂eq Map Explorer")
-
 dataset_choice = st.radio("Choose dataset:", ["CO2eq", "CO2"])
 metric_choice = st.radio("Choose metric:", ["emission", "activity"])
-
-# Choose which results dict
 results = results_CO2eq if dataset_choice == "CO2eq" else results_CO2
 
 # -------------------
-# Category color mapping
+# Category colors
 # -------------------
 category_colors = {
     "agriculture": "#1f77b4",
@@ -82,38 +83,33 @@ category_colors = {
 }
 
 # -------------------
-# Build Folium map
-# -------------------
-# -------------------
-# Prepare map
+# Prepare / reuse map
 # -------------------
 if "map_object" not in st.session_state:
-    # Initial map creation
     m = folium.Map(location=[-25, 135], zoom_start=4)
     st.session_state.map_object = m
 else:
-    # Reuse existing map (keeps pan/zoom)
     m = st.session_state.map_object
 
 # -------------------
-# Add / update markers only if metric changed
+# Update markers only if metric changed
 # -------------------
 if "last_metric" not in st.session_state or st.session_state.last_metric != metric_choice:
     st.session_state.last_metric = metric_choice
 
-    # Clear existing layers except base tiles
+    # Clear existing feature layers
     for key in list(m._children):
         if key.startswith("feature_group_"):
             del m._children[key]
 
-    # Add feature groups per category/source
+    # Add feature groups
     for key in results.keys():
         category, source = key.split('/')
         color = category_colors.get(category, "gray")
         df = results[key][metric_choice]
 
         fg = folium.FeatureGroup(name=f"{category}/{source}", show=False, control=True)
-        fg._name = f"feature_group_{category}_{source}"  # unique key to allow clearing
+        fg._name = f"feature_group_{category}_{source}"  # unique key
 
         for _, row in df.iterrows():
             if pd.isna(row["lat"]) or pd.isna(row["lon"]):
@@ -135,21 +131,20 @@ if "last_metric" not in st.session_state or st.session_state.last_metric != metr
 
         fg.add_to(m)
 
-    # Add LayerControl only once
-    if "layer_control_added" not in st.session_state:
-        folium.LayerControl(collapsed=False).add_to(m)
-        st.session_state.layer_control_added = True
-
-
 # -------------------
-# Display in Streamlit
+# Add LayerControl once
 # -------------------
+if "layer_control_added" not in st.session_state:
+    folium.LayerControl(collapsed=False).add_to(m)
+    st.session_state.layer_control_added = True
+
+# Inject CSS to make LayerControl smaller
 layer_control_css = """
 <style>
 .leaflet-control-layers {
-    font-size: 12px !important;       /* smaller text */
-    max-height: 250px !important;     /* reduce height */
-    width: 180px !important;          /* reduce width */
+    font-size: 12px !important;
+    max-height: 250px !important;
+    width: 180px !important;
 }
 .leaflet-control-layers-toggle {
     width: 25px !important;
@@ -157,8 +152,9 @@ layer_control_css = """
 }
 </style>
 """
-
 m.get_root().html.add_child(folium.Element(layer_control_css))
 
-
-st_folium(m, width=900, height=600)
+# -------------------
+# Display map
+# -------------------
+st_folium(m, width=900, height=600, returned_objects=False)
