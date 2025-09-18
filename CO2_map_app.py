@@ -5,9 +5,6 @@ import folium
 import streamlit as st
 from streamlit_folium import st_folium
 
-# -------------------
-# Paths and year
-# -------------------
 root_path = "data/"
 zip_path_CO2eq = root_path + "DATA.zip" 
 zip_path_CO2 = root_path + "DATA_co2.zip"
@@ -53,9 +50,8 @@ def load_results(zip_path, prefix):
                 }
     return results
 
-# -------------------
+
 # Load both datasets
-# -------------------
 results_CO2eq = load_results(zip_path_CO2eq, "DATA/")
 results_CO2   = load_results(zip_path_CO2, "DATA_co2/")
 
@@ -63,12 +59,15 @@ results_CO2   = load_results(zip_path_CO2, "DATA_co2/")
 # Streamlit UI
 # -------------------
 st.title("CO₂ and CO₂eq Map Explorer")
+
 dataset_choice = st.radio("Choose dataset:", ["CO2eq", "CO2"])
 metric_choice = st.radio("Choose metric:", ["emission", "activity"])
+
+# Choose which results dict
 results = results_CO2eq if dataset_choice == "CO2eq" else results_CO2
 
 # -------------------
-# Category colors
+# Category color mapping
 # -------------------
 category_colors = {
     "agriculture": "#1f77b4",
@@ -83,78 +82,54 @@ category_colors = {
 }
 
 # -------------------
-# Prepare / reuse map
+# Build Folium map
 # -------------------
-if "map_object" not in st.session_state:
-    m = folium.Map(location=[-25, 135], zoom_start=4)
-    st.session_state.map_object = m
-else:
-    m = st.session_state.map_object
+m = folium.Map(location=[-25, 135], zoom_start=4)
 
-# -------------------
-# Update markers only if metric changed
-# -------------------
-if "last_metric" not in st.session_state or st.session_state.last_metric != metric_choice:
-    st.session_state.last_metric = metric_choice
+# Keep track of categories already in legend
+legend_categories = {}
 
-    # Clear existing feature layers
-    for key in list(m._children):
-        if key.startswith("feature_group_"):
-            del m._children[key]
+for key in results.keys():
+    category, source = key.split('/')
+    color = category_colors.get(category, "gray")
+    
+    df = results[key][metric_choice]
 
-    # Add feature groups
-    for key in results.keys():
-        category, source = key.split('/')
-        color = category_colors.get(category, "gray")
-        df = results[key][metric_choice]
+    # Create feature group per category/source
+    fg = folium.FeatureGroup(name=f"{category}/{source}", show=False)
 
-        fg = folium.FeatureGroup(name=f"{category}/{source}", show=False, control=True)
-        fg._name = f"feature_group_{category}_{source}"  # unique key
+    for _, row in df.iterrows():
+        if pd.isna(row["lat"]) or pd.isna(row["lon"]):
+            continue
+        
+        unit = f"t{row['gas']}" if metric_choice == 'emission' else row['activity_units']
+        value = row[f"yearly_{metric_choice}"]
 
-        for _, row in df.iterrows():
-            if pd.isna(row["lat"]) or pd.isna(row["lon"]):
-                continue
-            unit = f"t{row['gas']}" if metric_choice == 'emission' else row['activity_units']
-            value = row[f"yearly_{metric_choice}"]
+        folium.CircleMarker(
+            location=[row["lat"], row["lon"]],
+            radius=min(value / 100000, 10),  # scale marker size
+            popup=(f"<b>Dataset:</b> {dataset_choice}<br>"
+                   f"<b>Category:</b> {category}/{source}<br>"
+                   f"<b>Source:</b> {row['source_name']}<br>"
+                   f"<b>{metric_choice.capitalize()}:</b> {value:,.0f} {unit}"),
+            tooltip=f"<b>Dataset:</b> {dataset_choice}<br>"
+                   f"<b>Category:</b> {category}/{source}<br>"
+                   f"<b>Source:</b> {row['source_name']}<br>"
+                   f"<b>{metric_choice.capitalize()}:</b> {value:,.0f} {unit}",
+            color=color,
+            fill=True,
+            fill_opacity=0.6,
+        ).add_to(fg)
 
-            folium.CircleMarker(
-                location=[row["lat"], row["lon"]],
-                radius=min(value / 100000, 10),
-                popup=(f"<b>Dataset:</b> {dataset_choice}<br>"
-                       f"<b>Category:</b> {category}/{source}<br>"
-                       f"<b>Source:</b> {row['source_name']}<br>"
-                       f"<b>{metric_choice.capitalize()}:</b> {value:,.0f} {unit}"),
-                color=color,
-                fill=True,
-                fill_opacity=0.6,
-            ).add_to(fg)
+    fg.add_to(m)
 
-        fg.add_to(m)
+    # Store legend info (only once per category)
+    if category not in legend_categories:
+        legend_categories[category] = color
+
 
 # -------------------
-# Add LayerControl once
+# Display in Streamlit
 # -------------------
-if "layer_control_added" not in st.session_state:
-    folium.LayerControl(collapsed=False).add_to(m)
-    st.session_state.layer_control_added = True
-
-# Inject CSS to make LayerControl smaller
-layer_control_css = """
-<style>
-.leaflet-control-layers {
-    font-size: 12px !important;
-    max-height: 250px !important;
-    width: 180px !important;
-}
-.leaflet-control-layers-toggle {
-    width: 25px !important;
-    height: 25px !important;
-}
-</style>
-"""
-m.get_root().html.add_child(folium.Element(layer_control_css))
-
-# -------------------
-# Display map
-# -------------------
-st_folium(m, width=900, height=600, returned_objects=False)
+folium.LayerControl(collapsed=False).add_to(m)
+st_folium(m, width=900, height=600)
