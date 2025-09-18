@@ -84,70 +84,81 @@ category_colors = {
 # -------------------
 # Build Folium map
 # -------------------
-m = folium.Map(location=[-25, 135], zoom_start=4)
+# -------------------
+# Prepare map
+# -------------------
+if "map_object" not in st.session_state:
+    # Initial map creation
+    m = folium.Map(location=[-25, 135], zoom_start=4)
+    st.session_state.map_object = m
+else:
+    # Reuse existing map (keeps pan/zoom)
+    m = st.session_state.map_object
 
-# Keep track of categories already in legend
-legend_categories = {}
+# -------------------
+# Add / update markers only if metric changed
+# -------------------
+if "last_metric" not in st.session_state or st.session_state.last_metric != metric_choice:
+    st.session_state.last_metric = metric_choice
 
-for key in results.keys():
-    category, source = key.split('/')
-    color = category_colors.get(category, "gray")
-    
-    df = results[key][metric_choice]
+    # Clear existing layers except base tiles
+    for key in list(m._children):
+        if key.startswith("feature_group_"):
+            del m._children[key]
 
-    # Create feature group per category/source
-    fg = folium.FeatureGroup(name=f"{category}/{source}", show=False)
+    # Add feature groups per category/source
+    for key in results.keys():
+        category, source = key.split('/')
+        color = category_colors.get(category, "gray")
+        df = results[key][metric_choice]
 
-    for _, row in df.iterrows():
-        if pd.isna(row["lat"]) or pd.isna(row["lon"]):
-            continue
+        fg = folium.FeatureGroup(name=f"{category}/{source}", show=False, control=True)
+        fg._name = f"feature_group_{category}_{source}"  # unique key to allow clearing
+
+        for _, row in df.iterrows():
+            if pd.isna(row["lat"]) or pd.isna(row["lon"]):
+                continue
+            unit = f"t{row['gas']}" if metric_choice == 'emission' else row['activity_units']
+            value = row[f"yearly_{metric_choice}"]
+
+            folium.CircleMarker(
+                location=[row["lat"], row["lon"]],
+                radius=min(value / 100000, 10),
+                popup=(f"<b>Dataset:</b> {dataset_choice}<br>"
+                       f"<b>Category:</b> {category}/{source}<br>"
+                       f"<b>Source:</b> {row['source_name']}<br>"
+                       f"<b>{metric_choice.capitalize()}:</b> {value:,.0f} {unit}"),
+                color=color,
+                fill=True,
+                fill_opacity=0.6,
+            ).add_to(fg)
+
+        fg.add_to(m)
+
+    # Add LayerControl only once
+    if "layer_control_added" not in st.session_state:
+        folium.LayerControl(collapsed=False).add_to(m)
+        st.session_state.layer_control_added = True
+
+
+        # -------------------
+        # Display in Streamlit
+        # -------------------
+        layer_control_css = """
+        <style>
+        .leaflet-control-layers {
+            font-size: 12px !important;       /* smaller text */
+            max-height: 250px !important;     /* reduce height */
+            width: 180px !important;          /* reduce width */
+        }
+        .leaflet-control-layers-toggle {
+            width: 25px !important;
+            height: 25px !important;
+        }
+        </style>
+        """
         
-        unit = f"t{row['gas']}" if metric_choice == 'emission' else row['activity_units']
-        value = row[f"yearly_{metric_choice}"]
+        m.get_root().html.add_child(folium.Element(layer_control_css))
 
-        folium.CircleMarker(
-            location=[row["lat"], row["lon"]],
-            radius=min(value / 100000, 10),  # scale marker size
-            popup=(f"<b>Dataset:</b> {dataset_choice}<br>"
-                   f"<b>Category:</b> {category}/{source}<br>"
-                   f"<b>Source:</b> {row['source_name']}<br>"
-                   f"<b>{metric_choice.capitalize()}:</b> {value:,.0f} {unit}"),
-            tooltip=f"<b>Dataset:</b> {dataset_choice}<br>"
-                   f"<b>Category:</b> {category}/{source}<br>"
-                   f"<b>Source:</b> {row['source_name']}<br>"
-                   f"<b>{metric_choice.capitalize()}:</b> {value:,.0f} {unit}",
-            color=color,
-            fill=True,
-            fill_opacity=0.6,
-        ).add_to(fg)
-
-    fg.add_to(m)
-
-    # Store legend info (only once per category)
-    if category not in legend_categories:
-        legend_categories[category] = color
-
-
-# -------------------
-# Display in Streamlit
-# -------------------
-layer_control_css = """
-<style>
-.leaflet-control-layers {
-    font-size: 12px !important;       /* smaller text */
-    max-height: 250px !important;     /* reduce height */
-    width: 180px !important;          /* reduce width */
-}
-.leaflet-control-layers-toggle {
-    width: 25px !important;
-    height: 25px !important;
-}
-</style>
-"""
-
-m.get_root().html.add_child(folium.Element(layer_control_css))
-
-# Add LayerControl
-folium.LayerControl(collapsed=False).add_to(m)
 
 st_folium(m, width=900, height=600)
