@@ -14,7 +14,7 @@ path_CO2 = root_path + "/data_co2_map.xlsx"
 with open(path_CO2, "rb") as f:
     excel_bytes = f.read()
 st.download_button(
-    label="📥 Download initial Excel file",
+    label="📥 Download initial CO2 Excel file",
     data=excel_bytes,
     file_name="data_co2_map.xlsx",  # name the user will see
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
