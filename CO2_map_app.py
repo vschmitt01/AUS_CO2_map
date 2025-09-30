@@ -9,7 +9,7 @@ from streamlit_folium import st_folium  # or folium_static
 st.set_page_config(page_title="CO2 Map", layout="wide")
 
 root_path = "AUS_CO2_map"
-path_CO2 = root_path + "data/data_co2_map.xlsx"
+path_CO2 = root_path + "/data/data_co2_map.xlsx"
 
 results_CO2 = pd.read_excel(path_CO2, sheet_name=None)  
 
