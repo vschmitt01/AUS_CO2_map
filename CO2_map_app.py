@@ -11,6 +11,13 @@ st.set_page_config(page_title="CO2 Map", layout="wide")
 root_path = "data"
 path_CO2 = root_path + "/data_co2_map.xlsx"
 
+st.download_button(
+    label="📥 Download initial Excel file",
+    data=excel_bytes,
+    file_name="data_co2_map.xlsx",  # name the user will see
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
 uploaded_file = st.file_uploader("Upload an other CO2 Excel file", type=["xlsx"])
 
 if uploaded_file:
