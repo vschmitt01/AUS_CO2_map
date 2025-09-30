@@ -33,7 +33,11 @@ def f_radius(row, df):
     return np.round(rad, 2)
 
 # Create the base map
-m = folium.Map(location=[-25, 135], zoom_start=4)
+m = folium.Map(location=[-25, 135], zoom_start=4, tiles=None, control_scale=True)
+
+# Add default street map (OpenStreetMap)
+folium.TileLayer("Esri.WorldImagery", name="Satellite View", control=True).add_to(m)
+folium.TileLayer("OpenStreetMap", name="Street Map", control=True).add_to(m)
 
 # Add satellite layer
 folium.TileLayer("Esri.WorldImagery", name="Satellite").add_to(m)
