@@ -11,7 +11,12 @@ st.set_page_config(page_title="CO2 Map", layout="wide")
 root_path = "data"
 path_CO2 = root_path + "/data_co2_map.xlsx"
 
-results_CO2 = pd.read_excel(path_CO2, sheet_name=None)  
+uploaded_file = st.file_uploader("Upload an other CO2 Excel file", type=["xlsx"])
+
+if uploaded_file:
+    results_CO2 = pd.read_excel(uploaded_file, sheet_name=None)
+else :
+    results_CO2 = pd.read_excel(path_CO2, sheet_name=None)  
 
 def f_radius(row, df):
     min_df = np.min(df['Tonnes CO2'])
