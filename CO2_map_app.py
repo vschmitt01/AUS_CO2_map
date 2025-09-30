@@ -11,6 +11,8 @@ st.set_page_config(page_title="CO2 Map", layout="wide")
 root_path = "data"
 path_CO2 = root_path + "/data_co2_map.xlsx"
 
+with open(path_CO2, "rb") as f:
+    excel_bytes = f.read()
 st.download_button(
     label="📥 Download initial Excel file",
     data=excel_bytes,
