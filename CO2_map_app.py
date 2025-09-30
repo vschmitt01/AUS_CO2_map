@@ -35,6 +35,9 @@ def f_radius(row, df):
 # Create the base map
 m = folium.Map(location=[-25, 135], zoom_start=4)
 
+# Add satellite layer
+folium.TileLayer("Esri.WorldImagery", name="Satellite").add_to(m)
+
 # Colors for each tab
 colors = ['red', 'blue', 'green', 'orange', 'purple', 'darkred', 'lightblue', 'cadetblue', 'pink']
 
