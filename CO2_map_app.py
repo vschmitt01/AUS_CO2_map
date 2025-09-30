@@ -20,7 +20,7 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
-uploaded_file = st.file_uploader("Upload an other CO2 Excel file", type=["xlsx"])
+uploaded_file = st.file_uploader("Upload other CO2 Excel file", type=["xlsx"])
 
 if uploaded_file:
     results_CO2 = pd.read_excel(uploaded_file, sheet_name=None)
