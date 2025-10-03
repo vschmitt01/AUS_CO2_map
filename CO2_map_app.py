@@ -27,19 +27,31 @@ if uploaded_file:
 else :
     results_CO2 = pd.read_excel(path_CO2, sheet_name=None)  
 
-def f_radius(row, df):
-    min_df = np.min(df['Tonnes CO2'])
-    max_df = np.max(df['Tonnes CO2'])
-    value = row['Tonnes CO2']
+def f_radius(df):
+    min_df = np.inf
+    max_df = 0
+    
+    for sub_df in df:        
+        min_sub_df = np.min(df[sub_df]['Tonnes CO2'])
+        max_sub_df = np.max(df[sub_df]['Tonnes CO2'])
+        if min_sub_df > 0:
+            if min_sub_df<= min_df:
+                min_df = min_sub_df
+        if max_sub_df >= max_df:
+            max_df = max_sub_df 
     
     size_max = 10
     size_min = 1
     
-    a_rad = (size_max - size_min) / (max_df - min_df) if max_df != min_df else 1
+    a_rad = (size_max - size_min) / (max_df - min_df)
     b_rad = size_max - a_rad * max_df
     
-    rad = a_rad * value + b_rad
-    return np.round(rad, 2)
+    for sub_df in df:        
+        df[sub_df]['rad'] = a_rad * df[sub_df]['Tonnes CO2'] + b_rad
+        
+    return df
+
+f_radius(results_CO2)
 
 # Create the base map
 m = folium.Map(location=[-25, 135], zoom_start=4, tiles=None, control_scale=True)
@@ -61,7 +73,7 @@ for i, (key, df) in enumerate(results_CO2.items()):
     for _, row in df.iterrows():
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
-            radius=f_radius(row, df),
+            radius=row["rad"],
             popup=folium.Popup(
                 html=(f"<b>Facility:</b> {row['Facility']}<br>"
                       f"<b>Company / Owner:</b> {row['Company / Owner']}<br>"
