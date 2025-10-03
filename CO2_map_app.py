@@ -93,18 +93,6 @@ for i, (key, df) in enumerate(results_CO2.items()):
 # Add layer control
 folium.LayerControl(collapsed=False).add_to(m)
 
-css = "<style>"
-for name, color in layer_colors.items():
-    safe_name = name.replace("'", "\\'")
-    css += f"""
-    .leaflet-control-layers-overlays label span:contains('{safe_name}') {{
-        color: {color} !important;
-        font-weight: bold !important;
-    }}
-    """
-css += "</style>"
-
-m.get_root().header.add_child(folium.Element(css))
 
 # --- Streamlit display ---
 st.title("CO2 Emissions Map")
