@@ -93,6 +93,28 @@ for i, (key, df) in enumerate(results_CO2.items()):
 # Add layer control
 folium.LayerControl(collapsed=False).add_to(m)
 
+# Map category → color mapping
+layer_colors = {
+    f"{category} — {source}": colors[i % len(colors)]
+    for i, (key, df) in enumerate(results_CO2.items())
+    for category, source in [key.split('-')]
+}
+
+# Build CSS/JS that colors the labels
+style_script = "<script>document.addEventListener('DOMContentLoaded', function() {"
+for name, color in layer_colors.items():
+    safe_name = name.replace("'", "\\'")  # escape quotes
+    style_script += f"""
+    Array.from(document.querySelectorAll('.leaflet-control-layers-overlays label span')).forEach(function(el) {{
+        if (el.textContent.trim() === '{safe_name}') {{
+            el.style.color = '{color}';
+            el.style.fontWeight = 'bold';
+        }}
+    }});"""
+style_script += "});</script>"
+
+m.get_root().html.add_child(folium.Element(style_script))
+
 # --- Streamlit display ---
 st.title("CO2 Emissions Map")
 st_folium(m, width=1200, height=800)
